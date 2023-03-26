@@ -95,9 +95,12 @@ const studyOnlineVideo = async (page) => {
 
 const study = async (page, courses) => {
   console.log('study...')
-
+  let clickNum = 0;
   for (let i = 0; i < courses.length; i++) {
     const { children } = courses[i];
+    if (clickNum>20) {
+      break;
+    }
     for (let x = 0; x < children.length; x++) {
       const { type, href, id, title, status } = children[x];
 
@@ -117,9 +120,12 @@ const study = async (page, courses) => {
       if (type === '音视频教材') {
         await studyOnlineVideo(page);
       }
-
+      clickNum++;
       // 停留几秒钟
       await page.waitForTimeout(Math.floor(Math.random() * 1000) + 3000);
+      if (clickNum > 20) {
+        break;
+      }
     }
   }
 }

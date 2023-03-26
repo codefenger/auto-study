@@ -12,53 +12,60 @@ dotenv.config();
 (async () => {
   const { baseURL } = config
 
-  const { SESSION } = process.env;
-  if (!SESSION) {
-    console.warn('缺少 SESSION 。')
-    return;
-  }
+  const { SESSIONS } = process.env;
+  const SESSIONARRAY = SESSIONS.split(',');
+  let sLen = SESSIONARRAY.length;
+  for (let i = 0; i < sLen; i++) {
+    let SESSION = SESSIONARRAY[i];
+    console.log(SESSION);
+    if (!SESSION) {
+      console.warn('缺少 SESSION 。')
+      return;
+    }
 
-  const browser = await puppeteer.launch({
-    headless: false,
-    executablePath,
-    defaultViewport: {
-      width: 1200,
-      height: 900
-    },
-  });
+    const browser = await puppeteer.launch({
+      headless: false,
+      executablePath,
+      defaultViewport: {
+        width: 1200,
+        height: 900
+      }
+    });
 
-  setTimeout(async () => {
-    await getData(page);
+    // setTimeout(async () => {
+    //   await getData(page);
+    //   await browser.close();
+    // }, 60 * 60 * 1000);
+
+    const page = await browser.newPage();
+
+    await page.setDefaultTimeout(60 * 1000);
+
+    await page.setCookie({
+      url: baseURL,
+      name: 'session',
+      value: SESSION,
+    });
+
+    await page.setUserAgent(userAgent);
+
+    let newData = await getData(page);
+    // try {
+    //   const data = await fse.readFile('./data.json');
+    //   newData = JSON.parse(data.toString());
+    //   console.log('使用 data.json 缓存');
+    // } catch (err) {
+    //   newData = await getData(page);
+    // }
+
+    await study(page, newData);
+
+    // 获取最新进度
+    // await getData(page);
+
     await browser.close();
-  }, 60 * 60 * 1000);
-
-  const page = await browser.newPage();
-
-  await page.setDefaultTimeout(60 * 1000);
-
-  await page.setCookie({
-    url: baseURL,
-    name: 'session',
-    value: SESSION,
-  });
-
-  await page.setUserAgent(userAgent);
-
-  let newData = [];
-  try {
-    const data = await fse.readFile('./data.json');
-    newData = JSON.parse(data.toString());
-    console.log('使用 data.json 缓存');
-  } catch (err) {
-    newData = await getData(page);
   }
 
-  await study(page, newData);
-
-  // 获取最新进度
-  await getData(page);
-
-  await browser.close();
 })();
 
 process.on('unhandledRejection', (reason, p) => {
